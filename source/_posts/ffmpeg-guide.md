@@ -1,5 +1,5 @@
 ---
-title: 用ffmpeg命令行转压视频
+title: FFmpeg命令行转压视频
 date: 2017-10-14 14:45:38
 categories:
 - 视频压缩
