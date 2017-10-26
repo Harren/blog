@@ -75,3 +75,6 @@ mvn clean install
 mvn sonar:sonar
 ```
 将 Soanr 所需要的数据上传到 Sonar 服务器上之后，Sonar 安装的插件会对这些数据进行分析和处理，并以各种方式显示给用户，从而使用户方便地对代码质量的监测和管理。
+
+### Sonar配置Gitlab可持续集成
+如果对项目有持续即成的需要，同时已经给项目添加了runner，则需要在项目目录下建.gitlab-ci.yml文件来自定义命令，具体参照[gitlab-ci使用](https://segmentfault.com/a/1190000006120164)简介 ，这样每次提交的时候都会自动运行脚本，
