@@ -1,7 +1,7 @@
 ---
 title: Sonar代码质量分析使用
-date: 2017-10-17 18:47:09
-tags:
+date: 2016-12-17 18:47:09
+tags: 
 ---
 ## Sonar概述
 Sonar是一个用于代码质量管理的开放平台。通过插件机制，Sonar 可以集成不同的测试工具，代码分析工具，以及持续集成工具。
@@ -35,7 +35,7 @@ mysql> CREATE USER sonar IDENTIFIED BY 'sonar';
 mysql> GRANT ALL PRIVILEGES ON *.* TO 'sonar'@'localhost' IDENTIFIED BY 'sonar' WITH GRANT OPTION;
 ```
 配置好数据库权限后，修改 sonar.properties 文件配置如下(数据库用户名密码为：sonar/sonar)
-![sonar_config](http://wx3.sinaimg.cnmw1024/78d85414ly1fkwoukblqyj20nr07s404.jpg)
+![sonar_config](http://wx3.sinaimg.cn/mw1024/78d85414ly1fkwoukblqyj20nr07s404.jpg)
 配置后重新启动sonar即可，此次因为需要创建数据库，重启较慢，重启成功后会在数据库中生成sonar相关的表。
 
 ## 使用Sonar进行代码质量管理
@@ -79,7 +79,7 @@ mvn sonar:sonar
 
 
 ### Sonar配置Gitlab可持续集成
-### 自动化脚本集成
+#### 自动化脚本集成
 如果对项目有持续即成的需要，同时项目是利用gitlab进行托管，给项目配置好runner，则需要在项目目录下建.gitlab-ci.yml文件来自定义命令，具体参照[gitlab-ci使用](https://segmentfault.com/a/1190000006120164)简介 ，这样每次提交的时候都会自动运行脚本，并将生成的报告直接上传到服务器，下面提供一个参考脚本如下
 
 ```yml
@@ -132,7 +132,7 @@ fi
 
 ```
 
-### Sonar写入Gitlab Discussion
+#### Sonar写入Gitlab Discussion
 如果希望直接在 gitlab 的每次 Merge_requesrs 中在 gitlab 的 Discussion 中显示出此次代码分析的结果，效果如下
 ![sonar_auth](http://wx3.sinaimg.cn/mw1024/78d85414ly1fkwowereo8j21fg0j6dk1.jpg)
 
