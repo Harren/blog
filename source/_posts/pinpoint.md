@@ -1,7 +1,10 @@
 ---
 title: Pinpoint简单介绍以及应用实例
 date: 2016-12-28 14:37:03
-tags: 性能监控
+categories:
+- 技术杂谈
+tags:
+- 性能监控
 ---
 Pinpoint是一个开源的APM(Application Performance Management/应用性能管理)工具，用于基于Java的大规模分布式系统，思路基于google Dapper，用于基于java的大规模分布式系统，通过跟踪分布式应用之间的调用来提供解决方案，以帮助分析系统的总体结构和内部模块之间如何相互联系，其开发的初衷主要基于以下思考元素。
 
@@ -97,4 +100,6 @@ javaagent:$AGENR_PATH/pinpoint-bootstrap.jar
 
 
 
-                                                                                                                                                                
+                                                                  
+                                                                         
+                     

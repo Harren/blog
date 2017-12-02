@@ -1,7 +1,10 @@
 ---
 title: Gitlab-CI持续集成
 date: 2016-11-27 13:57:27
+categories:
+- 技术杂谈
 tags:
+- 持续集成
 ---
 持续集成 (Continuous Integration) 是一种软件开发实践，即团队开发成员经常集成他们的工作，通过每个成员每天至少集成一次，也就意味着每天可能会发生多次集成。每次集成都通过自动化的构建（包括编译，发布，自动化测试）来验证，从而尽早地发现集成错误，同样在《Code Complete》里提到了，对于持续集成（在书中，Steve McConnell使用Incremental Integration的术语）有以下几点好处：
 
