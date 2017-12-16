@@ -1,6 +1,6 @@
 ---
-title: Java高并发-AKKA
-date: 2017-12-02 16:15:14
+title: Java高并发-Actor模型
+date: 2017-01-25 16:15:14
 categories:
 - Java
 tags:
