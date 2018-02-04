@@ -73,8 +73,10 @@ pagination_dir: page
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 #plugins:
-# - hexo-generator-feed
-# - hexo-generator-sitemap
+    #- kramed
+    #- hexo-math
+    #- hexo-generator-feed
+    #- hexo-generator-sitemap
 
 theme: next
 search: 

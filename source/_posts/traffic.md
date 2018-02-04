@@ -1,15 +1,15 @@
 ---
-title: 针对在线广告dsp系统的预算控制和流量预估的研究
-date: 2016-10-14 14:45:38
+title: 针对在线广告系统流量预估的研究
+date: 2017-03-14 14:45:38
 categories:
 - 技术杂谈
 tags:
 - 计算广告
 mathjax: true
 ---
-<!-- <script type="text/javascript" async
+<script type="text/javascript" async
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default">
-</script> -->
+</script>
 
 > 本文主要是针对国外的计算广告论文 Predicting Traffic of Online Advertising in Real-time Bidding Systems from Perspective of Demand-Side Platforms 进行技术学习的一次分享，同时拓展性的研究了竞价预算和流量预测的方法，具体的参考论文见最后的参考文献地址
 
@@ -50,8 +50,9 @@ mathjax: true
 
 由于不同的时间段流量差异较大，该文将一天按时间分为T个时间段，如果取$T = 24$， 则每天的每个时间段为一个小时，因此，对流量问题的分析模型可以量化为以下公式的求极值的问题。
 
+{% raw %}
 $${\arg _\Theta }\min \sum\limits_{\forall d,t} {loss(h({X_{d,t}};\Theta ),{Y_{d,t}}),1 \le d \le D,1 \le t \le T} $$
-
+{% endraw %}
 其中，$D$ 为训练数据的天数， ${Y_{d,t}}$ 为在 d 天的 t 时刻的实际流量，${h({X_{d,t}};\Theta )}$ 为预测模型函数，计算值和实际值的均方差为损失函数，通过训练，寻找最优的模型来使得损失函数最小。
 
 ### 系统框架
@@ -73,50 +74,53 @@ $${\arg _\Theta }\min \sum\limits_{\forall d,t} {loss(h({X_{d,t}};\Theta ),{Y_{d
 通过图中的对比可以发现，在任意时段对于流量的预测都过高或者过低，当流量发生变化的时候，对于流量的预测总是滞后于实际的流量值，因此，选择 SlotNumber 这一特征来弥补这种差距。
 
 SlotNum 是长度为 T 的一个二进制的一维数组，对于其定义如下
-
+{% raw %}
 $$SlotNu{m^k}(i) = 1,k = i$$
 $$SlotNu{m^k}(i) = 0,k \ne i$$
-
+{% endraw %}
 其中 ${i \in (1,T)}$，举个例子，当T=24时，则
-
+{% raw %}
 $$SlotNu{m^1} = [1,0.......0,0]$$
-
+{% endraw %}
 ### 流量异常处理
 由于在实际的线上广告系统中，其每天的流量规律往往不是一成不变的，对于流量的预测需要将流量异常的情况考虑在内，产生异常流量的原因主要包括两个部分，一是由于突发性事件造成的流量异常，例如某次事件的爆发，某次网络的迁移等，还有一种就是一种流量趋势的变化，在对流量建模的过程中需要将这种异常情况对于因变量进行一种平滑处理，为了解决流量异常的问题，通过综合考虑前k天的数据来对异常点的流量进行平滑处理。
 ### SmoothedLastSlotReqs
 通过均衡前k天的t时间点的流量来判断t时间点的流量是否正常，其具体的步骤如下:
 
 1. 获取到上一个时间点t的流量值, 计为
-
+{% raw %}
   $$originalLastReqs = Reqs(0,t)$$
+{% endraw %}  
 其中 $t$ 为当天的时间点，$Reqs$ 为前k天的流量数据，其为二维数组 
 
 2. 计算前k天的算术平均值和几何平均值
-
+{% raw %}
 $$avg = {1 \over k}\sum\limits_{i = 1}^k {Reqs(i,t)} $$
 $$st{d^2} = {1 \over k}\sum\limits_i^k {{{(reqs(i,t) - avg)}^2}} $$
-
+{% endraw %} 
 3. 判断实际流量是否是异常流量，如果是正常流量，则不进行平滑，否则进行平滑操作得到最终的 
-
+{% raw %}
 $${{\left\| {originalLastReqs - avg} \right\|} \over {std}} > tol$$
+{% endraw %} 
 其中tol为设定的阈值，根据经验值取，如果该计算结果大于预知，则
-
+{% raw %}
 $$lastSlotReq{s^{k + 1}} = {\rm{ }}\prod\limits_{i = 0}^k {Reqs(k,t)} $$
+{% endraw %}
 反之，则
-
+{% raw %}
 $$lastSlotReqs = originalLastReqs$$
-
+{% endraw %}
 ### SmoothedNDayReqs
 对于 $SmoothedNDayReqs$ 参数的平滑操作类似，由于该特征代表着对于流量的一种长期的效应，如果流量呈现一种上升或者下降的趋势，该特征需要能反映出这种趋势，对于该特征的值的计算如下：
-
+{% raw %}
 $$lastNDaysReq{s^k} = \prod\limits_{i = 1}^k {Reqs(t + 1,i)} $$
-
+{% endraw %}
 ### PredictTraffic
 由于对于损失函数的最优化计算是一个不适定的过程，通过引入正则项来求出其最优解，对于公式1增加正则项目修改如下：
-
+{% raw %}
 $${\arg _\Theta }\min \sum\limits_{\forall d,t} {loss(({\omega ^T}{X_{d,t}} + b) - {Y_{d,t}}),1 \le d \le D,1 \le t \le T} $$
-
-其中， ${X_{d,t}} = [lastNDayreqs,lastSLotreqs,slotNum]$ , ${{\omega ^T}}$和$b$为正则项，通过找到使得损失函数最小的$({\omega ^T},b)$来求的最优化模型，得到最优化模型后对于流量预测到步骤如下所示：
+{% endraw %}
+其中， {% raw %}${X_{d,t}} = [lastNDayreqs,lastSLotreqs,slotNum]$ , ${{\omega ^T}}$ {% endraw %}和$b$为正则项，通过找到使得损失函数最小的$({\omega ^T},b)$来求的最优化模型，得到最优化模型后对于流量预测到步骤如下所示：
 
 1. 获取到最新的最近的流量计为$Reqs(i,j)$,其中 $i$ 为天数，$j$ 为时间片的值。
 2. 获取到需要进行预测的时间片的值，计为 $t$。
