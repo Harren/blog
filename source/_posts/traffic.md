@@ -190,7 +190,7 @@ $$D = 7,T = 24$$
 
 ![](http://wx1.sinaimg.cn/mw1024/78d85414ly1fo5n915e9jj211y0i3mxe.jpg "图5 回归曲线与真实曲线对比")
 
-其最近七天的roc曲线和整体的roc曲线如下图所示
+其最近七天的RCO曲线和整体的RCO曲线如下图所示
 
 ![](http://wx3.sinaimg.cn/mw1024/78d85414ly1fo5n91oi6xj211y0i3mxa.jpg "图6 最近七天ROC曲线")
 
@@ -201,7 +201,7 @@ $$D = 7,T = 24$$
 
 ## 参考文献
 
-1. [ Predicting Traffic of Online Advertising in Real-time Bidding Systems from Perspective of Demand-Side Platforms](https://github.com/wzhe06/Ad-papers/blob/master/Budget%20Control/Predicting%20Traffic%20of%20Online%20Advertising%20in%20Real-time%20Bidding%20Systems%20from%20Perspective%20of%20Demand-Side%20Platforms.pdf)
+1. [ Lai H C, Shih W Y, Huang J L, et al. Predicting traffic of online advertising in real-time bidding systems from perspective of demand-side platforms[C]//Big Data (Big Data), 2016 IEEE International Conference on. IEEE, 2016: 3491-3498.](https://github.com/wzhe06/Ad-papers/blob/master/Budget%20Control/Predicting%20Traffic%20of%20Online%20Advertising%20in%20Real-time%20Bidding%20Systems%20from%20Perspective%20of%20Demand-Side%20Platforms.pdf)
 2. [Facebook 广告系统背后的Pacing算法](https://developers.facebook.com/docs/marketing-api/pacing)
 3. [Github代码地址](https://github.com/Harren/traffic_predicting.git)
 
