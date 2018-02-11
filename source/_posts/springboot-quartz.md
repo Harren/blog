@@ -1,6 +1,6 @@
 ---
 title: Springboot整合Quartz定时任务调度
-date: 2017-02-16 06:27:29
+date: 2017-03-16 06:27:29
 categories:
 - 技术杂谈
 tags:
