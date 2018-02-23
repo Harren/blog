@@ -2,7 +2,7 @@
 title: Java NIO解析
 date: 2017-02-12 11:28:11
 categories:
-- Java NIO原理浅析
+- Java
 tags:
 - 高并发
 ---
@@ -60,6 +60,33 @@ Buffer 是一个对象，它包含一些要写入或者刚读出的数据，Java
 
 在NIO 库中，所有数据都是用缓冲区处理的。在读取数据时，它是直接读到缓冲区中的。在写入数据时，它是写入到缓冲区中的。任何时候访问 NIO 中的数据，您都是将它放到缓冲区中。最常用的缓冲区类型是 ByteBuffer。一个 ByteBuffer 可以在其底层字节数组上进行 get/set 操作(即字节的获取和设置)。
 
+使用Buffer读写数据一般遵循以下四个步骤：
+
+1. 写入数据到Buffer
+2. 调用flip()方法
+3. 从Buffer中读取数据
+4. 调用clear()方法或者compact()方法
+
+下面是一个使用Buffer的例子
+```Java
+RandomAccessFile aFile = new RandomAccessFile("data/nio-data.txt", "rw");
+FileChannel inChannel = aFile.getChannel();
+
+//create buffer with capacity of 1024 bytes
+ByteBuffer buf = ByteBuffer.allocate(1024);
+
+int bytesRead = inChannel.read(buf); //read into buffer.
+while (bytesRead != -1) {
+  buf.flip();  //make buffer ready for read
+  while(buf.hasRemaining()){
+      System.out.print((char) buf.get()); // read 1 byte at a time
+  }
+  buf.clear(); //make buffer ready for writing
+  bytesRead = inChannel.read(buf);
+}
+aFile.close();
+```
+
 ### Selector
 
 Selector是JAVA NIO中的多路复用器，配合SelectionKey使用，SelectionKey代表着一个Channel和Selector的关系的抽象，Channel向Selector注册的时候产生，由Selector维护。Selector维护着三个SelectionKey的集合：
@@ -68,11 +95,58 @@ Selector是JAVA NIO中的多路复用器，配合SelectionKey使用，SelectionK
 * selected key set：这个集合是key set集合的子集，当有SelectionKey关联的Channel有Channel向Selector注册的IO事件就绪的时候并且有select操作，对应的SelectionKey会被放到selected key set中。因为这个集合中的SelectionKey可以通过直接调用Set的remove将SelectionKey移除。
 * cancelled-key:这个集合是也是key set的子集。当有已经向Selector注册的Channel发生degistered的时候，SelectionKey将被放到这个集合，并且在下一次select的时候被从所有的集合中移出。
 
-![](http://wx4.sinaimg.cn/mw690/78d85414ly1focjwn45gtj20ve0jodh2.jpg "图3 Selector的Selection Key集合流转图")
+![](http://wx4.sinaimg.cn/mw1024/78d85414ly1focjwn45gtj20ve0jodh2.jpg "图3 Selector的Selection Key集合流转图")
 
 在开发过程中，我们可以将多个Channel注册到一个Selector实例中，用一个线程来处理所有的IO事件，我们也可以将多个Channel注册到多个Selector实例中，结合高效的线程模型可以达到很好的效果,
 下面一个简单例子来说整个流转的过程。
+```Java
+public class NioEchoServer {
+
+    private Selector selector;
+    private ExecutorService tp = Executors.newCachedThreadPool();
+
+    public static Map<Socket, Long> timeStat = new HashMap<>();
+
+    private void startServer() throws Exception {
+
+        selector = SelectorProvider.provider().openSelector();
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+
+        // 设置SocketChannel为非阻塞模式
+        serverSocketChannel.configureBlocking(false);
+
+        InetSocketAddress isa = new InetSocketAddress(8000);
+        serverSocketChannel.bind(isa);
+
+        SelectionKey acceptKey = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        for(;;) {
+            // select()方法是一个阻塞方法,如果没数据没,就等待,有数据就返回
+            selector.select();
+
+            Set<SelectionKey> readKeys = selector.selectedKeys();
+            Iterator<SelectionKey> iter = readKeys.iterator();
+
+            while (iter.hasNext()) {
+                SelectionKey key = iter.next();
+                iter.remove();
+
+                if(key.isAcceptable()) {
+                    // 判断key所代表的channel是否处于Acceptable状态
+                    doAccept(key);
+                } else if(key.isValid() && key.isReadable()) {
+                    // 判断key所代表的channel是否可以读取
+                    doRead(key);
+                } else if(key.isValid() && key.isWritable()) {
+                    // 判断key所代表的channel是否可以写
+                    doWrite(key);
+                }
+            }
+        }
+    }
+}
+```
 
 
-
+## 参考文献
 
