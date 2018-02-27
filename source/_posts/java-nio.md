@@ -28,38 +28,32 @@ Java NIO是NEW IO的简称，他是一种可以代替Java IO的一套新的IO�
 
 > 排队等待或者叫号等待的过程中等待者可以一边玩游戏一边听歌一边等待，这种机制就是非阻塞的。
 
-## 传统的BIO
-一个连接一个线程，即客户端有连接请求时服务器端就需要启动一个线程进行处理，如果这个连接不做任何事情会造成不必要的线程开销。
+## BIO模型
+图1展示的是BIO的服务端的通信模型，采用BIO通信模型的服务端，通常由一个独立的Acceptor线程负责监听客户端的连接，它接收到客户端请求后为每个客户端创建一个新的线程进行链路处理，处理完成之后。通过输出流返回应答给客户端，线程销毁，这就是典型的一请求一应答通信模型。
 
-## 伪异步I/O编程
+![](http://wx1.sinaimg.cn/mw1024/78d85414ly1fov09fcrgqj20ga05w0t6.jpg "图1 同步阻塞I/O服务端通信模型")
 
+该架构最大的问题就是不具备弹性伸缩能力，当并发访问量增加后，服务端的线程个数和并发访问数呈现 1:1 的正比关系，由于线程是JAVA虚拟机非常宝贵的系统资源，当线程数膨胀之后，系统的性能急剧下降，随着并发量的继续增加，可能会发生句柄溢出、线程堆栈溢出等问题，并导致服务器最终宕机。
 
+## 伪异步I/O模型
+为了解决同步阻塞I/O面临的一个链路需要一个线程处理的问题，后端通过一个线程池来处理多个客户端的请求接入，通过线程池可以灵活的调配线程资源，设置线程的最大值，防止由于海量并发接入导致线程耗尽。当有新的客户端接入的时候，将客户端的 Socket 封装成一个 Task 投递到后端到线程池进行处理，JDK 的线程池维护一个消息队列和 N 个活跃线程堆消息队列重的任务进行处理，由于线程数可以设置消息队列的大小和最大线程数，因此，它的资源占用是可控的，无论多少个客户端并发访问，都不会导致资源的耗尽和宕机。
 
+![](http://wx2.sinaimg.cn/mw690/78d85414ly1fov0ex0svgj20jx06g756.jpg "图2 伪异步I/O服务端通信模型")
 
-## 常见Java IO模型
+伪异步I/O虽然避免了为每个请求都创建一个独立线程造成的资源耗尽问题，但是由于它底层的通信仍然采用同步阻塞模型，因此无法从根本上解决同步I/O导致的通信线程阻塞问题。
 
-### 同步阻塞I/O(Blocking IO)
+## NIO模型
 
-
-
-
-### 同步非阻塞I/O(Non-Blocking IO)
-服务器实现模式为一个请求一个线程，但客户端发送的连接请求都会注册到多路复用器上，多路复用器轮询到连接有I/O请求时才启动一个线程进行处理
-
-
-### 异步IO(Asynchronous IO)
-服务器实现模式为一个有效请求一个线程，客户端的I/O请求都是由OS先完成了再通知服务器应用去启动线程进行处理。
-
-## NIO模型I/O
 Java的NIO是基于IO多路复用模型，其主要有三个核心的组件：Channel、Buffer和Selector
 
-![](http://wx1.sinaimg.cn/mw690/78d85414ly1fociun9yiej20eu05ha9x.jpg "图1 nio核心组件")
+![](http://wx1.sinaimg.cn/mw690/78d85414ly1fociun9yiej20eu05ha9x.jpg "图3 nio核心组件")
 
 在JAVA NIO中，到任何目的地(或来自任何地方)的所有数据都必须通过一个 Channel 对象。一个 Buffer 实质上是一个容器对象。发送给一个通道的所有对象都必须首先放到缓冲区中；同样地，从通道中读取的任何数据都要读到缓冲区中。
 
-![](http://wx1.sinaimg.cn/mw690/78d85414ly1fociun9yiej20eu05ha9x.jpg "图2 nio读写示意图")
+![](http://wx1.sinaimg.cn/mw690/78d85414ly1fociun9yiej20eu05ha9x.jpg "图4 nio读写示意图")
 
-### Channel
+### 基本概念
+#### Channel
 通道是对原 I/O 包中的流的模拟，一个Channel可以和文件或者网络Socker对应，如果Channel对应这一个Socket，那么往这个Channel中写数据，就等同于向Socket写数据。Java中重要的通道实现主要包括一下几种
 
 | 通道类型 | Description |
@@ -84,7 +78,7 @@ try(SeekableByteChannel seekableByteChannel = Files.newByteChannel(
 }
 ```
 
-### Buffer
+#### Buffer
 
 Buffer 是一个对象，它包含一些要写入或者刚读出的数据，Java NIO中的Buffer用于和NIO通道进行交互。如你所知，数据是从通道读入缓冲区，从缓冲区写入到通道中的。缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存。这块内存被包装成NIO Buffer对象，并提供了一组方法，用来方便的访问该块内存。
 
@@ -117,7 +111,7 @@ while (bytesRead != -1) {
 aFile.close();
 ```
 
-### Selector
+#### Selector
 
 Selector是JAVA NIO中的多路复用器，配合SelectionKey使用，SelectionKey代表着一个Channel和Selector的关系的抽象，Channel向Selector注册的时候产生，由Selector维护。Selector维护着三个SelectionKey的集合：
 
@@ -125,10 +119,14 @@ Selector是JAVA NIO中的多路复用器，配合SelectionKey使用，SelectionK
 * selected key set：这个集合是key set集合的子集，当有SelectionKey关联的Channel有Channel向Selector注册的IO事件就绪的时候并且有select操作，对应的SelectionKey会被放到selected key set中。因为这个集合中的SelectionKey可以通过直接调用Set的remove将SelectionKey移除。
 * cancelled-key:这个集合是也是key set的子集。当有已经向Selector注册的Channel发生degistered的时候，SelectionKey将被放到这个集合，并且在下一次select的时候被从所有的集合中移出。
 
-![](http://wx4.sinaimg.cn/mw1024/78d85414ly1focjwn45gtj20ve0jodh2.jpg "图3 Selector的Selection Key集合流转图")
+![](http://wx4.sinaimg.cn/mw1024/78d85414ly1focjwn45gtj20ve0jodh2.jpg "图5 Selector的Selection Key集合流转图")
 
 在开发过程中，我们可以将多个Channel注册到一个Selector实例中，用一个线程来处理所有的IO事件，我们也可以将多个Channel注册到多个Selector实例中，结合高效的线程模型可以达到很好的效果,
-下面一个简单例子来说整个流转的过程。
+
+### NIO服务端序列图
+![](http://wx2.sinaimg.cn/mw690/78d85414ly1fov3gc4uzej20g40ght9c.jpg "图6 NIO服务端创建序列图")
+
+下面一个简单例子来说整个服务运行的过程。
 ```Java
 public class NioEchoServer {
 
@@ -177,6 +175,81 @@ public class NioEchoServer {
 }
 ```
 
+### NIO客户端序列图
+![](http://wx1.sinaimg.cn/mw690/78d85414ly1fov3gcnzs0j20g90i5751.jpg "图7 NIO客户端创建序列图")
+
+可以根据一下的代码来理解整个流程
+```java
+public class NioEchoClient {
+
+    private Selector selector;
+
+    public void init(String ip, int port) throws IOException {
+
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+        selector = SelectorProvider.provider().openSelector();
+        socketChannel.connect(new InetSocketAddress(ip, port));
+        socketChannel.register(selector, SelectionKey.OP_CONNECT);
+    }
+
+    public void working() throws IOException {
+        while (true) {
+            if(!selector.isOpen()) {
+                break;
+            }
+            selector.select();
+            Iterator<SelectionKey> ite = selector.selectedKeys().iterator();
+            while (ite.hasNext()) {
+                SelectionKey key = ite.next();
+                ite.remove();
+                if(key.isConnectable()) {
+                    connect(key);
+                } else if(key.isReadable()) {
+                    read(key);
+                }
+            }
+        }
+    }
+
+    public void connect(SelectionKey key) throws IOException {
+        SocketChannel channel = (SocketChannel) key.channel();
+        // 如果正在连接,则完成连接
+        if(channel.isConnectionPending()) {
+            // 由于当前channel是非阻塞的,因此在connect方法返回时连接不一定建立了,后续需要再次确认
+            channel.finishConnect();
+        }
+
+        channel.configureBlocking(false);
+        channel.write(ByteBuffer.wrap(new String("hello server!\r\n").getBytes()));
+        channel.register(selector, SelectionKey.OP_READ);
+    }
+
+    public void read(SelectionKey key) throws IOException {
+        SocketChannel channel = (SocketChannel) key.channel();
+
+        ByteBuffer buffer = ByteBuffer.allocate(100);
+        channel.read(buffer);
+        byte[] data = buffer.array();
+        String msg = new String(data).trim();
+        System.out.println("client receive msg:" + msg);
+    }
+}
+```
+
+## AIO模型
+
+与NIO不同，当进行读写操作时，只须直接调用API的read或write方法即可。这两种方法均为异步的，对于读操作而言，当有流可读取时，操作系统会将可读的流传入read方法的缓冲区，并通知应用程序；对于写操作而言，当操作系统将write方法传递的流写入完毕时，操作系统主动通知应用程序。  即可以理解为，read/write方法都是异步的，完成后会主动调用回调函数。  在JDK1.7中，这部分内容被称作NIO.2，主要在java.nio.channels包下增加了下面四个异步通道：
+
+* AsynchronousSocketChannel
+* AsynchronousServerSocketChannel
+* AsynchronousFileChannel
+* AsynchronousDatagramChannel
+
+其中的read/write方法，会返回一个带回调函数的对象，当执行完读取/写入操作后，直接调用回调函数。
+
 
 ## 参考文献
+1. [Netty权威指南]()
+2. [Java高并发程序设计]()
 
