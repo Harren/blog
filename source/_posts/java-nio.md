@@ -117,7 +117,7 @@ Selector是JAVA NIO中的多路复用器，配合SelectionKey使用，SelectionK
 
 * key set：这个集合包含所有向Selector注册的Channel产生的SelectionKey，这个集合中的SelectionKey是不能直接被修改的，除非SelectionKey被channel，并且发生select的时候SelectionKey才被移出。
 * selected key set：这个集合是key set集合的子集，当有SelectionKey关联的Channel有Channel向Selector注册的IO事件就绪的时候并且有select操作，对应的SelectionKey会被放到selected key set中。因为这个集合中的SelectionKey可以通过直接调用Set的remove将SelectionKey移除。
-* cancelled-key:这个集合是也是key set的子集。当有已经向Selector注册的Channel发生degistered的时候，SelectionKey将被放到这个集合，并且在下一次select的时候被从所有的集合中移出。
+* cancelled-key:这个集合是也是key set的子集。当有已经向Selector注册的Channel发生registered的时候，SelectionKey将被放到这个集合，并且在下一次select的时候被从所有的集合中移出。
 
 ![](http://wx4.sinaimg.cn/mw1024/78d85414ly1focjwn45gtj20ve0jodh2.jpg "图5 Selector的Selection Key集合流转图")
 
