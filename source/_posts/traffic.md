@@ -6,6 +6,7 @@ categories:
 tags:
 - 计算广告
 mathjax: true
+top: true
 ---
 <script type="text/javascript" async
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default">
