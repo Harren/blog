@@ -14,6 +14,7 @@
 </div>
 
 <div class="theme-info">
-  {{ __('footer.theme') }} - TigerDU
+  {{ __('footer.theme') }} - TigerDU -
+</span>
 </div>
 {% endif %}
