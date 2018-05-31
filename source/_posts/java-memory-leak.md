@@ -18,9 +18,9 @@ Java中的内存泄露，广义并通俗的说，就是指无用对象（不再�
 ### Jmap(内存映像工具)
 jmap(Memory Map for Java) 命令用于生成堆存储文件，它还可以查询finalize执行队列、Java堆和永久代的详细信息，例如空间使用率、当前使用的是哪种收集器等，其命令行格式为
 ```bash
-jmap [ option ] vmid
+jmap [ option ] <pid>
 ```
-其中vmid为进程号，option选项的和合法值与具体的含义如下：
+其中<pid>为进程号，option选项的和合法值与具体的含义如下：
 
 |  选 项 | 作 用 | 
 |-----|---------|
@@ -31,10 +31,90 @@ jmap [ option ] vmid
 | -permstat | 以ClassLoader为统计口径显示永久代内存状态。只在类Unix下有效 | 
 | -F | 当虚拟机进城对 -dump 选项没要响应时，使用这个选项强制生成dump快照 | 
 
-下面根据该命令对于发生内存泄露的应用 dump 快照文件
+首先打印heap空间的概要，这里可以粗略的检验heap空间的使用情况
 ```bash
-jmap -dump:format=b,file=/tmp/dump1.hprof 219207
+[root@bx-docker007 kanghua]# jmap -heap 128060
+Attaching to process ID 128060, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.111-b14
+
+using thread-local object allocation.
+Parallel GC with 18 thread(s)
+
+Heap Configuration:
+   MinHeapFreeRatio         = 0
+   MaxHeapFreeRatio         = 100
+   MaxHeapSize              = 32210157568 (30718.0MB)
+   NewSize                  = 703070208 (670.5MB)
+   MaxNewSize               = 10736369664 (10239.0MB)
+   OldSize                  = 1406664704 (1341.5MB)
+   NewRatio                 = 2
+   SurvivorRatio            = 8
+   MetaspaceSize            = 21807104 (20.796875MB)
+   CompressedClassSpaceSize = 1073741824 (1024.0MB)
+   MaxMetaspaceSize         = 17592186044415 MB
+   G1HeapRegionSize         = 0 (0.0MB)
+
+Heap Usage:
+PS Young Generation
+Eden Space:
+   capacity = 5145362432 (4907.0MB)
+   used     = 228703800 (218.10894012451172MB)
+   free     = 4916658632 (4688.891059875488MB)
+   4.444853069584506% used
+From Space:
+   capacity = 18350080 (17.5MB)
+   used     = 18321760 (17.472991943359375MB)
+   free     = 28320 (0.027008056640625MB)
+   99.84566824776786% used
+To Space:
+   capacity = 11534336 (11.0MB)
+   used     = 0 (0.0MB)
+   free     = 11534336 (11.0MB)
+   0.0% used
+PS Old Generation
+   capacity = 5639241728 (5378.0MB)
+   used     = 75488904 (71.99182891845703MB)
+   free     = 5563752824 (5306.008171081543MB)
+   1.3386357180821316% used
 ```
+可以看出新生代和老年代的空间都很大，但是实际的使用的内存空间都比较小，考虑是整个程序中产生了大内存然后释放造成的整体内存很大，如果发现老年代的使用率比较高的话，可以手动进行一次FullGC观察老年代的使用率是否有变化，命令如下：
+```
+jmap -histo:live <pid>
+```
+检测gc的次数，命令如下
+```
+jstat -gc <pid> <period> <times>
+```
+输出如下所示
+```
+[root@bx-docker007 kanghua]# jstat -gc vmid 1000 1
+S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC     MU    CCSC   CCSU   YGC     YGCT    FGC    FGCT     GCT
+23040.0 20480.0  0.0   20372.5 4788224.0 2295539.6 5507072.0   81879.6   61912.0 60106.4 7168.0 6775.4  36327  493.242   7      2.401  495.643
+```
+其中结果中每个项目的含义可以参考官方对[jstat](http://docs.oracle.com/javase/1.5.0/docs/tooldocs/share/jstat.html)的文档，简单翻译如下
+- S0C: Young Generation第一个survivor space的内存大小 (kB).
+- S1C: Young Generation第二个survivor space的内存大小 (kB).
+- S0U: Young Generation第一个Survivor space当前已使用的内存大小 (kB).
+- S1U: Young Generation第二个Survivor space当前已经使用的内存大小 (kB).
+- EC: Young Generation中eden space的内存大小 (kB).
+- EU: Young Generation中Eden space当前已使用的内存大小 (kB).
+- OC: Old Generation的内存大小 (kB).
+- OU: Old Generation当前已使用的内存大小 (kB).
+- PC: Permanent Generation的内存大小 (kB)
+- PU: Permanent Generation当前已使用的内存大小 (kB).
+- YGC: 从启动到采样时Young Generation GC的次数
+- YGCT: 从启动到采样时Young Generation GC所用的时间 (s).
+- FGC: 从启动到采样时Old Generation GC的次数.
+- FGCT: 从启动到采样时Old Generation GC所用的时间 (s).
+- GCT: 从启动到采样时GC所用的总时间 (s).
+
+其中，可以发现FullGC的次数为7次，从这里可以看出没有内存泄漏问题的存在，如果频繁发生FullGC，那么存在内存泄漏的问题，就需要将堆栈信息导出进行分析了,下面根据该命令对于发生内存泄露的应用 dump 快照文件
+```bash
+jmap -dump:format=b,file=/tmp/dump1.hprof <pid>
+```
+
 ### MAT(堆转储分析工具)
 Sun JDK提供了jhat(JVM Heap Analysis Tool)命令与jmap搭配使用，来分析jmap生成的堆转储快照，但是，在实际工作中，一般都不会使用jhat命令分析dump文件，主要原因有两个：一是一般不会在部署应用服务的服务器上直接分析dump文件，因为分析工作是一个耗时而且消耗硬件资源的过程；另一个原因是jhat的分析功能相对来说比较简陋，我使用专业用于分析dump文件的Eclipse Memory Analyzer进行分析查找内存泄漏问题。
 
