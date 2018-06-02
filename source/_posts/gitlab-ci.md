@@ -1,6 +1,6 @@
 ---
 title: Gitlab-CI持续集成
-date: 2016-11-27 13:57:27
+date: 2017-09-27 13:57:27
 categories:
 - 技术杂谈
 tags:
