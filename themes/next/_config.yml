@@ -122,8 +122,8 @@ links_title: Links
 #links_layout: block
 #links_layout: inline
 links:
-  tuntunxiong: http://tuntunxiong.com/
-  Marx: https://humemarx.github.io/
+  IBM DeveloperWorks- JAVA: https://www.ibm.com/developerworks/cn/java/
+  Spring Framework: https://spring.io/projects/spring-framework  
 
 # Sidebar Avatar
 # in theme directory(source/images): /images/avatar.jpg
